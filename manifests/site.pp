@@ -56,4 +56,24 @@ file { "/etc/apache2/sites-available/default":
   force => true,
 }
 
-#
+# Set Apache to run as the Vagrant user
+
+exec { "ApacheUserChange" :
+  command => "/bin/sed -i 's/APACHE_RUN_USER=www-data/APACHE_RUN_USER=vagrant/' /etc/apache2/envvars",
+  onlyif  => "/bin/grep -c 'APACHE_RUN_USER=www-data' /etc/apache2/envvars",
+  require => Package["apache2"],
+  notify  => Service["apache2"],
+}
+
+exec { "ApacheGroupChange" :
+  command => "/bin/sed -i 's/APACHE_RUN_GROUP=www-data/APACHE_RUN_GROUP=vagrant/' /etc/apache2/envvars",
+  onlyif  => "/bin/grep -c 'APACHE_RUN_GROUP=www-data' /etc/apache2/envvars",
+  require => Package["apache2"],
+  notify  => Service["apache2"],
+}
+
+exec { "apache_lockfile_permissions" :
+  command => "/bin/chown -R vagrant:www-data /var/lock/apache2",
+  require => Package["apache2"],
+  notify  => Service["apache2"],
+}
